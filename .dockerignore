@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# 환경 변수
+.env.example
+
+# 기타
+README.md
+.DS_Store
+*.log

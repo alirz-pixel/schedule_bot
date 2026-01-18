@@ -1,0 +1,13 @@
+services:
+  discord-bot:
+    build: .
+    container_name: discord-schedule-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    # 로그 확인을 위한 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
