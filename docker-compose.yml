@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - TZ=Asia/Seoul
+      - ENV=main
     # 로그 확인을 위한 설정
     logging:
       driver: "json-file"

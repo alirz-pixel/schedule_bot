@@ -1,6 +1,5 @@
 import os
 import dotenv
-import asyncio
 from datetime import datetime, timedelta
 
 import discord
@@ -8,7 +7,12 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 dotenv.load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+ENV = os.getenv("ENV")
+if ENV == "dev":
+    BOT_TOKEN = os.getenv("BOT_TEST_TOKEN")
+else:
+    BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # 봇 설정
 intents = discord.Intents.default()
