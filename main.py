@@ -81,10 +81,9 @@ class AttendanceButton(discord.ui.View):
             await interaction.response.send_message("이미 응답하셨습니다.", ephemeral=True)
             return
 
-        # 일정이 이미 확정되거나 취소된 경우
-        if schedule.get('activated') or schedule.get('cancelled'):
-            status_text = "확정" if schedule.get('activated') else "취소"
-            await interaction.response.send_message(f"이 일정은 이미 {status_text}되었습니다.", ephemeral=True)
+        # 일정이 이미 취소된 경우
+        if schedule.get('cancelled'):
+            await interaction.response.send_message(f"이 일정은 취소 되었습니다.", ephemeral=True)
             return
 
         # 응답 저장
@@ -109,6 +108,9 @@ class AttendanceButton(discord.ui.View):
         # 현재 참석자 수 계산
         attending_count = sum(1 for v in schedule['responses'].values() if v)
         no_response_count = len([u for u in schedule['mentioned_users'] if u not in schedule['responses']])
+
+        if schedule["activated"] and attending:
+            await self.notify_activation_to_user(schedule, user_id)
 
         # 일정 확정 확인
         if attending_count >= schedule['min_participants'] and not schedule['activated']:
@@ -227,22 +229,25 @@ class AttendanceButton(discord.ui.View):
 
         return embed
 
+    async def notify_activation_to_user(self, schedule, user_id):
+        try:
+            user = await bot.fetch_user(user_id)
+            embed = discord.Embed(
+                title="🎉 일정이 확정되었습니다!",
+                description=f"**{schedule['title']}** 일정이 최소 인원을 충족하여 확정되었습니다.",
+                color=discord.Color.green()
+            )
+            embed.add_field(name="📍 날짜/시간", value=schedule['datetime'], inline=False)
+            embed.add_field(name="📝 설명", value=schedule['description'], inline=False)
+            await user.send(embed=embed)
+        except Exception as e:
+            print(f"DM 전송 실패 (User {user_id}): {e}")
+
     async def notify_activation(self, schedule):
         """일정 활성화 시 참석자들에게 DM 전송"""
         for user_id in schedule['mentioned_users']:
             if schedule['responses'].get(user_id, False):
-                try:
-                    user = await bot.fetch_user(user_id)
-                    embed = discord.Embed(
-                        title="🎉 일정이 확정되었습니다!",
-                        description=f"**{schedule['title']}** 일정이 최소 인원을 충족하여 확정되었습니다.",
-                        color=discord.Color.green()
-                    )
-                    embed.add_field(name="📍 날짜/시간", value=schedule['datetime'], inline=False)
-                    embed.add_field(name="📝 설명", value=schedule['description'], inline=False)
-                    await user.send(embed=embed)
-                except Exception as e:
-                    print(f"DM 전송 실패 (User {user_id}): {e}")
+                await self.notify_activation_to_user(schedule, user_id)
 
     async def notify_cancellation(self, schedule):
         """일정 취소 시 모든 참석자들에게 DM 전송"""
